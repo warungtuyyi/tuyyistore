@@ -1,0 +1,1692 @@
+<!DOCTYPE html>
+<html lang="id" class="scroll-smooth h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TuyyiStore — Modern E-Commerce & Dashboard Admin</title>
+    
+    <!-- Tailwind CSS CDN with Dark Mode Config -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    boxShadow: {
+                        'subtle': '0 1px 3px 0 rgba(0, 0, 0, 0.04), 0 1px 2px 0 rgba(0, 0, 0, 0.02)',
+                        'card': '0 4px 20px -2px rgba(0, 0, 0, 0.05)',
+                        'drawer': '-10px 0 30px rgba(0, 0, 0, 0.12)'
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Google Fonts Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    
+    <style>
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 9999px; }
+        .dark ::-webkit-scrollbar-thumb { background: #334155; }
+        
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+        .toast-enter { transform: translateY(100%); opacity: 0; }
+        .toast-enter-active { transform: translateY(0); opacity: 1; transition: all 250ms cubic-bezier(0.16, 1, 0.3, 1); }
+
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(12px);
+        }
+        .dark .glass-panel {
+            background: rgba(15, 23, 42, 0.85);
+            backdrop-filter: blur(12px);
+        }
+    </style>
+</head>
+<body class="bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 font-sans antialiased flex flex-col min-h-screen transition-colors duration-200">
+
+    <header class="sticky top-0 z-30 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200/80 dark:border-slate-800">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16 gap-3">
+                
+                <!-- TuyyiStore Brand Logo -->
+                <div class="flex items-center gap-2.5 cursor-pointer select-none group" onclick="switchView('store'); filterCategory('all');">
+                    <div class="w-8 h-8 bg-gradient-to-tr from-indigo-600 to-violet-500 text-white rounded-xl flex items-center justify-center font-black text-base shadow-xs group-hover:scale-105 transition-transform">
+                        T
+                    </div>
+                    <span class="text-base font-extrabold tracking-tight text-slate-900 dark:text-white">Tuyyi<span class="text-indigo-600 dark:text-indigo-400">Store</span></span>
+                </div>
+
+                <!-- Integrated Minimalist Search Bar -->
+                <div id="headerSearchContainer" class="flex-1 max-w-sm relative hidden md:block">
+                    <input type="text" id="searchInput" oninput="handleSearch()" placeholder="Cari barang impian di TuyyiStore..." 
+                        class="w-full pl-9 pr-4 py-1.5 text-xs bg-slate-100/80 dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700 rounded-full focus:bg-white dark:focus:bg-slate-900 focus:border-indigo-600 dark:focus:border-indigo-400 focus:outline-none transition-all placeholder:text-slate-400">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-400 text-xs"></i>
+                </div>
+
+                <!-- Action Controls: Mode Switcher, Dark Toggle, Wishlist, Cart, User -->
+                <div class="flex items-center gap-2">
+                    
+                    <!-- Segmented Mode Switcher (Toko / Admin) -->
+                    <div class="bg-slate-100 dark:bg-slate-800 p-1 rounded-xl flex items-center border border-slate-200/60 dark:border-slate-700 text-xs font-semibold">
+                        <button id="modeStoreBtn" onclick="switchView('store')" class="px-3 py-1 rounded-lg transition-all text-slate-900 dark:text-white bg-white dark:bg-slate-900 shadow-subtle">
+                            <i class="fa-solid fa-store mr-1 text-[10px] text-slate-500"></i> Toko
+                        </button>
+                        <button id="modeAdminBtn" onclick="switchView('admin')" class="px-3 py-1 rounded-lg transition-all text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white">
+                            <i class="fa-solid fa-sliders mr-1 text-[10px]"></i> Admin
+                        </button>
+                    </div>
+
+                    <!-- Dark / Light Mode Toggle Button -->
+                    <button onclick="toggleDarkMode()" class="p-2 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-all" title="Ubah Tema">
+                        <i id="themeIcon" class="fa-solid fa-moon text-sm"></i>
+                    </button>
+
+                    <!-- Wishlist Button -->
+                    <button onclick="filterCategory('wishlist'); switchView('store');" class="relative p-2 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-all" title="Favorit Saya">
+                        <i class="fa-solid fa-heart text-sm text-red-500"></i>
+                        <span id="wishlistBadge" class="absolute top-1 right-1 bg-red-500 text-white text-[9px] font-bold w-4 h-4 rounded-full flex items-center justify-center transform scale-0 transition-transform">0</span>
+                    </button>
+
+                    <!-- Cart Button -->
+                    <button id="headerCartBtn" onclick="toggleCartDrawer()" class="relative p-2 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-all" title="Keranjang Belanja">
+                        <i class="fa-solid fa-bag-shopping text-sm"></i>
+                        <span id="cartBadge" class="absolute top-1 right-1 bg-indigo-600 text-white text-[9px] font-bold w-4 h-4 rounded-full flex items-center justify-center transform scale-0 transition-transform">0</span>
+                    </button>
+
+                    <!-- User Profile / Google Auth Button -->
+                    <div id="authSection" class="flex items-center ml-1">
+                        <button id="loginBtn" onclick="handleGoogleLogin()" class="flex items-center gap-1.5 px-3 py-1.5 bg-slate-900 dark:bg-white text-white dark:text-slate-900 hover:bg-slate-800 dark:hover:bg-slate-100 text-xs font-semibold rounded-xl transition-all shadow-xs">
+                            <i class="fa-brands fa-google text-xs"></i>
+                            <span class="hidden sm:inline">Masuk</span>
+                        </button>
+
+                        <div id="userProfile" class="hidden relative">
+                            <button onclick="toggleUserDropdown()" class="flex items-center gap-1.5 p-1 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-all border border-slate-200 dark:border-slate-700">
+                                <img id="userAvatar" src="" alt="User Avatar" class="w-6 h-6 rounded-full object-cover">
+                                <i class="fa-solid fa-chevron-down text-[9px] text-slate-400 mr-1"></i>
+                            </button>
+
+                            <!-- User Dropdown Menu -->
+                            <div id="userDropdown" class="hidden absolute right-0 top-10 w-48 bg-white dark:bg-slate-900 rounded-2xl shadow-lg border border-slate-200/80 dark:border-slate-800 py-1.5 z-50">
+                                <div class="px-3.5 py-2 border-b border-slate-100 dark:border-slate-800">
+                                    <p id="dropdownName" class="text-xs font-bold text-slate-900 dark:text-white truncate"></p>
+                                    <p id="dropdownEmail" class="text-[10px] text-slate-400 truncate"></p>
+                                </div>
+                                <button onclick="openActivityModal()" class="w-full text-left px-3.5 py-2 text-xs text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center gap-2 transition-colors">
+                                    <i class="fa-solid fa-clock-rotate-left text-slate-400"></i> Aktivitas Saya
+                                </button>
+                                <button onclick="handleLogout()" class="w-full text-left px-3.5 py-2 text-xs text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 flex items-center gap-2 transition-colors border-t border-slate-100 dark:border-slate-800">
+                                    <i class="fa-solid fa-right-from-bracket"></i> Keluar
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- STOREFRONT VIEW -->
+    <main id="storeView" class="flex-grow">
+        
+        <!-- Hero Banner with Flash Sale Countdown Timer -->
+        <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-6">
+            <div class="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 border border-slate-800 text-white rounded-3xl p-6 sm:p-10 flex flex-col md:flex-row items-center justify-between gap-8 shadow-card relative overflow-hidden">
+                <div class="max-w-xl space-y-4 text-center md:text-left z-10">
+                    <div class="inline-flex items-center gap-2 px-3 py-1 bg-red-500/20 text-red-300 border border-red-500/30 rounded-full text-[10px] font-bold uppercase tracking-wider">
+                        <i class="fa-solid fa-bolt text-red-400"></i> TuyyiStore Flash Sale — Diskon s/d 50%
+                    </div>
+                    
+                    <h1 class="text-2xl sm:text-4xl font-extrabold tracking-tight leading-snug">
+                        Koleksi Barang Pilihan & Gaya Hidup Modern.
+                    </h1>
+
+                    <!-- Flash Sale Timer Widget -->
+                    <div class="flex items-center justify-center md:justify-start gap-2 pt-1">
+                        <span class="text-xs text-slate-300 font-medium mr-1">Promo Berakhir Dalam:</span>
+                        <div class="flex items-center gap-1.5 text-xs font-mono font-bold">
+                            <span id="timerHours" class="bg-white/10 px-2.5 py-1 rounded-lg border border-white/10">02</span> :
+                            <span id="timerMinutes" class="bg-white/10 px-2.5 py-1 rounded-lg border border-white/10">45</span> :
+                            <span id="timerSeconds" class="bg-white/10 px-2.5 py-1 rounded-lg border border-white/10">18</span>
+                        </div>
+                    </div>
+
+                    <div class="pt-2">
+                        <a href="#katalog" class="inline-flex items-center gap-2 px-5 py-2.5 bg-white text-slate-900 hover:bg-slate-100 text-xs font-bold rounded-xl transition-all shadow-xs">
+                            <span>Mulai Belanja</span>
+                            <i class="fa-solid fa-arrow-down text-[10px]"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <div class="w-48 sm:w-60 aspect-square rounded-2xl overflow-hidden shadow-2xl border border-white/10 shrink-0 z-10">
+                    <img src="https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=600&auto=format&fit=crop&q=80" alt="TuyyiStore Promo" class="w-full h-full object-cover">
+                </div>
+            </div>
+        </section>
+
+        <!-- Product Catalog Section -->
+        <section id="katalog" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+            <!-- Catalog Controls Header -->
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+                <div>
+                    <h2 class="text-xl font-bold text-slate-900 dark:text-white tracking-tight">Katalog TuyyiStore</h2>
+                    <p class="text-slate-500 dark:text-slate-400 text-xs mt-0.5">Filter berdasarkan kategori atau gunakan pengurutan produk.</p>
+                </div>
+
+                <div class="flex flex-wrap items-center justify-between sm:justify-end gap-3">
+                    <!-- Category Chips -->
+                    <div class="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar" id="categoryButtons">
+                        <!-- Dynamic categories injected by JS -->
+                    </div>
+
+                    <!-- Sorting Dropdown -->
+                    <select id="sortSelect" onchange="handleSortChange()" class="px-3 py-1.5 text-xs bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 text-slate-700 dark:text-slate-300 rounded-xl focus:outline-none">
+                        <option value="newest">Terbaru</option>
+                        <option value="price-low">Harga: Terendah</option>
+                        <option value="price-high">Harga: Tertinggi</option>
+                        <option value="rating">Rating Tertinggi</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Products Grid -->
+            <div id="productsGrid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                <!-- Product cards injected by JS -->
+            </div>
+
+            <!-- Empty State -->
+            <div id="emptyState" class="hidden text-center py-16">
+                <div class="w-12 h-12 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-3 text-slate-400">
+                    <i class="fa-solid fa-box-open text-xl"></i>
+                </div>
+                <h3 class="text-sm font-bold text-slate-800 dark:text-white">Tidak Ada Produk</h3>
+                <p class="text-slate-400 text-xs mt-1">Coba sesuaikan pencarian atau kategori yang Anda pilih.</p>
+            </div>
+        </section>
+    </main>
+
+    <!-- ADMIN DASHBOARD VIEW -->
+    <div id="adminView" class="hidden flex-grow bg-slate-100/70 dark:bg-slate-950 py-6 px-4 sm:px-6 lg:px-8">
+        <div class="max-w-7xl mx-auto space-y-6">
+            
+            <!-- Dashboard Top Header Bar -->
+            <div class="bg-white dark:bg-slate-900 rounded-3xl p-6 shadow-subtle border border-slate-200/80 dark:border-slate-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <div>
+                    <span class="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-wider block mb-1">Panel Kendali Admin</span>
+                    <h1 class="text-xl font-bold text-slate-900 dark:text-white">Dashboard Operasional TuyyiStore</h1>
+                    <p class="text-slate-500 dark:text-slate-400 text-xs mt-0.5">Kelola stok, pantau pesanan pelanggan, dan kelola laporan keuangan.</p>
+                </div>
+
+                <div class="flex items-center gap-2">
+                    <button onclick="openAdminProductModal()" class="px-4 py-2 bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-semibold rounded-xl text-xs shadow-xs flex items-center gap-2 hover:bg-slate-800 transition-all">
+                        <i class="fa-solid fa-plus text-xs"></i>
+                        <span>Tambah Produk</span>
+                    </button>
+                    <button onclick="exportOrdersToCSV()" class="px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-xl text-xs shadow-xs flex items-center gap-1.5 transition-all" title="Unduh Laporan CSV">
+                        <i class="fa-solid fa-file-csv text-sm"></i> Export CSV
+                    </button>
+                </div>
+            </div>
+
+            <!-- KPI Metric Cards -->
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                <div class="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-subtle">
+                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Total Pendapatan</span>
+                    <h3 id="adminMetricRevenue" class="text-xl font-extrabold text-slate-900 dark:text-white">Rp 0</h3>
+                </div>
+
+                <div class="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-subtle">
+                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Total Pesanan</span>
+                    <h3 id="adminMetricOrders" class="text-xl font-extrabold text-slate-900 dark:text-white">0</h3>
+                </div>
+
+                <div class="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-subtle">
+                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Jumlah Jenis Produk</span>
+                    <h3 id="adminMetricProducts" class="text-xl font-extrabold text-slate-900 dark:text-white">0</h3>
+                </div>
+
+                <div class="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-subtle">
+                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Stok Menipis (≤ 3)</span>
+                    <h3 id="adminMetricLowStock" class="text-xl font-extrabold text-amber-600 dark:text-amber-400">0 Produk</h3>
+                </div>
+            </div>
+
+            <!-- Analytics Chart Section -->
+            <div class="bg-white dark:bg-slate-900 rounded-3xl p-6 shadow-subtle border border-slate-200/80 dark:border-slate-800 space-y-4">
+                <h3 class="text-xs font-bold uppercase tracking-wider text-slate-500">Grafik Analitik Ringkasan Penjualan</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
+                    <!-- Sales Trend Bar Chart -->
+                    <div class="space-y-3">
+                        <span class="text-xs font-semibold text-slate-700 dark:text-slate-300">Tren Penjualan Mingguan</span>
+                        <div class="h-36 flex items-end justify-between gap-2 border-b border-slate-200 dark:border-slate-800 pb-2 px-2">
+                            <div class="flex-1 flex flex-col items-center gap-1">
+                                <div class="w-full bg-indigo-500 rounded-t-md h-12"></div>
+                                <span class="text-[9px] text-slate-400">Sen</span>
+                            </div>
+                            <div class="flex-1 flex flex-col items-center gap-1">
+                                <div class="w-full bg-indigo-500 rounded-t-md h-20"></div>
+                                <span class="text-[9px] text-slate-400">Sel</span>
+                            </div>
+                            <div class="flex-1 flex flex-col items-center gap-1">
+                                <div class="w-full bg-indigo-500 rounded-t-md h-16"></div>
+                                <span class="text-[9px] text-slate-400">Rab</span>
+                            </div>
+                            <div class="flex-1 flex flex-col items-center gap-1">
+                                <div class="w-full bg-indigo-500 rounded-t-md h-28"></div>
+                                <span class="text-[9px] text-slate-400">Kam</span>
+                            </div>
+                            <div class="flex-1 flex flex-col items-center gap-1">
+                                <div class="w-full bg-indigo-500 rounded-t-md h-24"></div>
+                                <span class="text-[9px] text-slate-400">Jum</span>
+                            </div>
+                            <div class="flex-1 flex flex-col items-center gap-1">
+                                <div class="w-full bg-indigo-600 rounded-t-md h-32"></div>
+                                <span class="text-[9px] font-bold text-slate-800 dark:text-white">Sab</span>
+                            </div>
+                            <div class="flex-1 flex flex-col items-center gap-1">
+                                <div class="w-full bg-indigo-600 rounded-t-md h-28"></div>
+                                <span class="text-[9px] font-bold text-slate-800 dark:text-white">Min</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Category Breakdown -->
+                    <div class="space-y-3">
+                        <span class="text-xs font-semibold text-slate-700 dark:text-slate-300">Kontribusi Kategori</span>
+                        <div class="space-y-2.5 pt-1">
+                            <div>
+                                <div class="flex justify-between text-[11px] mb-1">
+                                    <span class="text-slate-600 dark:text-slate-400">Elektronik</span>
+                                    <span class="font-bold text-slate-800 dark:text-white">65%</span>
+                                </div>
+                                <div class="w-full h-2 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                                    <div class="bg-indigo-600 h-full rounded-full" style="width: 65%"></div>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="flex justify-between text-[11px] mb-1">
+                                    <span class="text-slate-600 dark:text-slate-400">Pakaian</span>
+                                    <span class="font-bold text-slate-800 dark:text-white">25%</span>
+                                </div>
+                                <div class="w-full h-2 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                                    <div class="bg-emerald-500 h-full rounded-full" style="width: 25%"></div>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="flex justify-between text-[11px] mb-1">
+                                    <span class="text-slate-600 dark:text-slate-400">Aksesori</span>
+                                    <span class="font-bold text-slate-800 dark:text-white">10%</span>
+                                </div>
+                                <div class="w-full h-2 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                                    <div class="bg-amber-500 h-full rounded-full" style="width: 10%"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Admin Tabbed Navigation Table -->
+            <div class="bg-white dark:bg-slate-900 rounded-3xl shadow-subtle border border-slate-200/80 dark:border-slate-800 overflow-hidden">
+                <div class="flex border-b border-slate-200/80 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900 px-5 pt-3 gap-3 overflow-x-auto no-scrollbar">
+                    <button onclick="switchAdminTab('products')" id="adminTabBtn-products" class="pb-3 text-xs font-bold text-slate-900 dark:text-white border-b-2 border-slate-900 dark:border-white transition-colors">
+                        Inventaris Produk
+                    </button>
+                    <button onclick="switchAdminTab('orders')" id="adminTabBtn-orders" class="pb-3 text-xs font-bold text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 border-b-2 border-transparent transition-colors">
+                        Pesanan Masuk
+                    </button>
+                    <button onclick="switchAdminTab('logs')" id="adminTabBtn-logs" class="pb-3 text-xs font-bold text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 border-b-2 border-transparent transition-colors">
+                        Log Aktivitas
+                    </button>
+                </div>
+
+                <div class="p-6">
+                    <!-- Tab 1: Products Table -->
+                    <div id="adminTab-products" class="space-y-4">
+                        <div class="flex items-center justify-between gap-4">
+                            <h3 class="text-xs font-bold uppercase tracking-wider text-slate-500">Daftar Barang</h3>
+                            <input type="text" id="adminProductSearch" oninput="renderAdminProducts()" placeholder="Cari barang..." class="px-3 py-1.5 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl w-48 focus:outline-none">
+                        </div>
+
+                        <div class="overflow-x-auto border border-slate-200/80 dark:border-slate-800 rounded-2xl">
+                            <table class="w-full text-left text-xs text-slate-600 dark:text-slate-300">
+                                <thead class="bg-slate-50/80 dark:bg-slate-800/80 text-slate-700 dark:text-slate-300 font-bold uppercase tracking-wider text-[10px] border-b border-slate-200/80 dark:border-slate-800">
+                                    <tr>
+                                        <th class="p-3.5">Produk</th>
+                                        <th class="p-3.5">Kategori</th>
+                                        <th class="p-3.5">Harga</th>
+                                        <th class="p-3.5">Stok</th>
+                                        <th class="p-3.5 text-right">Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="adminProductsTable" class="divide-y divide-slate-100 dark:divide-slate-800">
+                                    <!-- Dynamic product rows -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Tab 2: Orders Table -->
+                    <div id="adminTab-orders" class="hidden space-y-4">
+                        <div class="flex items-center justify-between">
+                            <h3 class="text-xs font-bold uppercase tracking-wider text-slate-500">Daftar Transaksi Pelanggan</h3>
+                            <span class="text-xs text-slate-400">Total: <strong id="adminOrdersCount" class="text-slate-800 dark:text-white">0</strong></span>
+                        </div>
+
+                        <div class="overflow-x-auto border border-slate-200/80 dark:border-slate-800 rounded-2xl">
+                            <table class="w-full text-left text-xs text-slate-600 dark:text-slate-300">
+                                <thead class="bg-slate-50/80 dark:bg-slate-800/80 text-slate-700 dark:text-slate-300 font-bold uppercase tracking-wider text-[10px] border-b border-slate-200/80 dark:border-slate-800">
+                                    <tr>
+                                        <th class="p-3.5">ID</th>
+                                        <th class="p-3.5">Penerima</th>
+                                        <th class="p-3.5">Alamat Tujuan</th>
+                                        <th class="p-3.5">Item</th>
+                                        <th class="p-3.5">Total</th>
+                                        <th class="p-3.5">Status & Timeline Progress</th>
+                                        <th class="p-3.5 text-right">Aksi Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="adminOrdersTable" class="divide-y divide-slate-100 dark:divide-slate-800">
+                                    <!-- Dynamic order rows -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Tab 3: System Logs -->
+                    <div id="adminTab-logs" class="hidden space-y-3">
+                        <h3 class="text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Riwayat Log Aktivitas Real-time</h3>
+                        <div id="adminLogsContainer" class="space-y-2 max-h-[380px] overflow-y-auto pr-1">
+                            <!-- Dynamic logs -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- FOOTER -->
+    <footer class="bg-slate-900 text-slate-400 text-xs mt-auto border-t border-slate-800">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div class="space-y-2.5">
+                    <div class="flex items-center gap-2">
+                        <div class="w-7 h-7 bg-gradient-to-tr from-indigo-600 to-violet-500 text-white rounded-lg flex items-center justify-center font-black">T</div>
+                        <span class="text-sm font-bold text-white">TuyyiStore</span>
+                    </div>
+                    <p class="text-slate-400 text-xs leading-relaxed max-w-sm">
+                        Platform e-commerce resmi TuyyiStore dengan kemudahan belanja online, garansi produk resmi, dan layanan pelanggan responsif.
+                    </p>
+                </div>
+
+                <div>
+                    <h4 class="text-white font-bold mb-3 text-[11px] uppercase tracking-wider">Kontak Support Admin</h4>
+                    <ul class="space-y-2">
+                        <li class="flex items-center gap-2">
+                            <i class="fa-solid fa-envelope text-slate-400 text-xs"></i>
+                            <a href="mailto:tuyyistore@gmail.com" class="hover:text-white transition-colors">tuyyistore@gmail.com</a>
+                        </li>
+                        <li class="flex items-center gap-2">
+                            <i class="fa-solid fa-phone text-slate-400 text-xs"></i>
+                            <a href="https://wa.me/6283121214520" target="_blank" class="hover:text-white transition-colors">+62 831-2121-4520</a>
+                        </li>
+                    </ul>
+                </div>
+
+                <div>
+                    <h4 class="text-white font-bold mb-3 text-[11px] uppercase tracking-wider">Navigasi Halaman</h4>
+                    <div class="flex flex-col space-y-1.5">
+                        <button onclick="switchView('store')" class="text-left hover:text-white transition-colors">Toko Utama</button>
+                        <button onclick="switchView('admin')" class="text-left hover:text-white transition-colors">Dashboard Admin</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pt-6 mt-6 border-t border-slate-800 text-center text-slate-500 text-[11px]">
+                &copy; 2026 TuyyiStore. All rights reserved.
+            </div>
+        </div>
+    </footer>
+
+    <!-- SLIDE-OVER CART DRAWER -->
+    <div id="cartOverlay" onclick="toggleCartDrawer()" class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-40 hidden opacity-0 transition-opacity duration-200"></div>
+
+    <aside id="cartDrawer" class="fixed top-0 right-0 z-50 w-full sm:w-96 h-full bg-white dark:bg-slate-900 shadow-drawer transform translate-x-full transition-transform duration-250 ease-in-out flex flex-col">
+        <div class="p-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50/50 dark:bg-slate-900">
+            <div class="flex items-center gap-2">
+                <i class="fa-solid fa-bag-shopping text-slate-800 dark:text-white"></i>
+                <h3 class="font-bold text-slate-800 dark:text-white text-xs">Keranjang Belanja</h3>
+            </div>
+            <button onclick="toggleCartDrawer()" class="text-slate-400 hover:text-slate-600 dark:hover:text-white p-1">
+                <i class="fa-solid fa-xmark text-sm"></i>
+            </button>
+        </div>
+
+        <div id="cartItemsContainer" class="flex-1 overflow-y-auto p-4 space-y-3">
+            <!-- Dynamic Cart Items -->
+        </div>
+
+        <!-- Cart Extras: Coupon & Shipping Courier -->
+        <div class="p-4 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 space-y-3">
+            <!-- Coupon Form -->
+            <div class="flex gap-2">
+                <input type="text" id="couponInput" placeholder="Kode Promo (TUYYI2026)" class="flex-1 px-3 py-1.5 text-xs bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none uppercase font-semibold">
+                <button onclick="applyCoupon()" class="px-3 py-1.5 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-xl text-xs font-bold hover:bg-slate-800 transition-all">Gunakan</button>
+            </div>
+            <div id="appliedCouponBadge" class="hidden text-[10px] text-emerald-600 dark:text-emerald-400 font-bold flex items-center justify-between">
+                <span>Kupon Aktif: <strong id="couponCodeName"></strong></span>
+                <button onclick="removeCoupon()" class="text-red-500 hover:underline">Hapus</button>
+            </div>
+
+            <!-- Courier Options -->
+            <div>
+                <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Kurir Pengiriman</label>
+                <select id="courierSelect" onchange="updateCartUI()" class="w-full px-3 py-1.5 text-xs bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-800 dark:text-white focus:outline-none">
+                    <option value="15000">J&T Express (Rp 15.000)</option>
+                    <option value="18000">JNE Reguler (Rp 18.000)</option>
+                    <option value="12000">SiCepat Hemat (Rp 12.000)</option>
+                    <option value="25000">GoSend Instant (Rp 25.000)</option>
+                </select>
+            </div>
+
+            <!-- Price Breakdown -->
+            <div class="space-y-1 text-xs pt-1">
+                <div class="flex justify-between text-slate-500">
+                    <span>Subtotal</span>
+                    <span id="cartSubtotal" class="font-semibold text-slate-800 dark:text-white">Rp 0</span>
+                </div>
+                <div class="flex justify-between text-slate-500">
+                    <span>Ongkir</span>
+                    <span id="cartShipping" class="font-semibold text-slate-800 dark:text-white">Rp 15.000</span>
+                </div>
+                <div id="discountRow" class="hidden justify-between text-emerald-600 font-medium">
+                    <span>Diskon Kupon</span>
+                    <span id="cartDiscount">- Rp 0</span>
+                </div>
+                <div class="flex justify-between text-slate-500">
+                    <span>Pajak (11%)</span>
+                    <span id="cartTax" class="font-semibold text-slate-800 dark:text-white">Rp 0</span>
+                </div>
+                <div class="flex justify-between font-bold text-sm text-slate-900 dark:text-white pt-2 border-t border-slate-200 dark:border-slate-800">
+                    <span>Total Tagihan</span>
+                    <span id="cartTotal" class="text-indigo-600 dark:text-indigo-400">Rp 0</span>
+                </div>
+            </div>
+
+            <div class="space-y-2 pt-1">
+                <button onclick="checkoutViaWhatsApp()" class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs transition-all flex items-center justify-center gap-2 shadow-xs">
+                    <i class="fa-brands fa-whatsapp text-sm"></i>
+                    <span>Checkout via WhatsApp Direct</span>
+                </button>
+                <button onclick="openCheckoutModal()" class="w-full py-2.5 bg-slate-900 dark:bg-white text-white dark:text-slate-900 hover:bg-slate-800 font-bold rounded-xl text-xs transition-all flex items-center justify-center gap-2 shadow-xs">
+                    <span>Lanjut Checkout Standar</span>
+                </button>
+            </div>
+        </div>
+    </aside>
+
+    <!-- PRODUCT DETAIL & REVIEWS MODAL -->
+    <div id="productModal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-xs">
+        <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-lg w-full p-6 shadow-2xl relative max-h-[90vh] overflow-y-auto">
+            <button onclick="closeProductModal()" class="absolute top-5 right-5 text-slate-400 hover:text-slate-600 dark:hover:text-white z-10">
+                <i class="fa-solid fa-xmark text-sm"></i>
+            </button>
+            <div id="productModalContent"></div>
+        </div>
+    </div>
+
+    <!-- CHECKOUT MODAL -->
+    <div id="checkoutModal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-xs">
+        <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-md w-full p-6 shadow-2xl relative max-h-[90vh] overflow-y-auto">
+            <button onclick="closeCheckoutModal()" class="absolute top-5 right-5 text-slate-400 hover:text-slate-600 dark:hover:text-white">
+                <i class="fa-solid fa-xmark text-sm"></i>
+            </button>
+            
+            <h3 class="text-base font-bold text-slate-900 dark:text-white mb-1">Formulir Checkout TuyyiStore</h3>
+            <p class="text-slate-500 dark:text-slate-400 text-xs mb-4">Lengkapi informasi penerima untuk memproses pesanan.</p>
+
+            <form onsubmit="handleCheckoutSubmit(event)" class="space-y-3">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Nama Lengkap Penerima</label>
+                    <input type="text" id="checkoutName" required placeholder="Contoh: Budi Santoso" class="w-full px-3.5 py-2 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl outline-none">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Nomor HP / WhatsApp</label>
+                    <input type="tel" id="checkoutPhone" required placeholder="Contoh: 081234567890" class="w-full px-3.5 py-2 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl outline-none">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Alamat Tujuan Pengiriman</label>
+                    <textarea id="checkoutAddress" required rows="2" placeholder="Alamat lengkap penerima..." class="w-full px-3.5 py-2 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl outline-none"></textarea>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Metode Pembayaran</label>
+                    <select id="checkoutPayment" class="w-full px-3.5 py-2 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl outline-none">
+                        <option value="Transfer Bank (BCA/Mandiri/BNI)">Transfer Bank (BCA / Mandiri / BNI)</option>
+                        <option value="E-Wallet (Gopay/OVO/Dana)">E-Wallet (Gopay / OVO / Dana / ShopeePay)</option>
+                        <option value="COD (Bayar di Tempat)">COD (Bayar saat barang sampai)</option>
+                    </select>
+                </div>
+
+                <div class="pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
+                    <div>
+                        <span class="text-[10px] text-slate-400 block">Total Tagihan</span>
+                        <span id="checkoutModalTotal" class="text-base font-extrabold text-indigo-600 dark:text-indigo-400">Rp 0</span>
+                    </div>
+                    <button type="submit" class="px-5 py-2.5 bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-semibold rounded-xl text-xs shadow-xs">
+                        Konfirmasi Pesanan
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ADMIN PIN VERIFICATION MODAL -->
+    <div id="adminPinModal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">
+        <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-sm w-full p-6 shadow-2xl text-center space-y-4">
+            <div class="w-12 h-12 bg-slate-100 dark:bg-slate-800 rounded-2xl flex items-center justify-center mx-auto text-slate-800 dark:text-white">
+                <i class="fa-solid fa-lock text-xl"></i>
+            </div>
+            <div>
+                <h3 class="text-base font-bold text-slate-900 dark:text-white">Verifikasi Akses Admin</h3>
+                <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Masukkan PIN Keamanan Admin (`123456`) untuk masuk ke TuyyiStore Admin.</p>
+            </div>
+            <input type="password" id="adminPinInput" maxlength="6" placeholder="******" class="w-full text-center text-lg tracking-widest px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl outline-none font-bold">
+            <div class="flex gap-2">
+                <button onclick="closeAdminPinModal()" class="flex-1 py-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-xl text-xs font-semibold">Batal</button>
+                <button onclick="verifyAdminPin()" class="flex-1 py-2 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-xl text-xs font-bold">Verifikasi</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- USER ACTIVITIES MODAL -->
+    <div id="activityModal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-xs">
+        <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-md w-full p-6 shadow-2xl relative max-h-[85vh] flex flex-col">
+            <div class="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
+                <h3 class="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider">Aktivitas Saya</h3>
+                <button onclick="closeActivityModal()" class="text-slate-400 hover:text-slate-600 dark:hover:text-white">
+                    <i class="fa-solid fa-xmark text-sm"></i>
+                </button>
+            </div>
+            <div id="activityList" class="flex-1 overflow-y-auto py-3 space-y-2">
+                <p class="text-center text-slate-400 text-xs py-4">Memuat aktivitas...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ADMIN PRODUCT MODAL -->
+    <div id="adminProductModal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-xs">
+        <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-md w-full p-6 shadow-2xl relative">
+            <button onclick="closeAdminProductModal()" class="absolute top-5 right-5 text-slate-400 hover:text-slate-600 dark:hover:text-white">
+                <i class="fa-solid fa-xmark text-sm"></i>
+            </button>
+            <h3 id="adminProductModalTitle" class="text-sm font-bold text-slate-900 dark:text-white mb-4">Tambah Produk Baru</h3>
+            
+            <form onsubmit="handleSaveProduct(event)" class="space-y-2.5 text-xs">
+                <input type="hidden" id="adminProdId">
+                <div>
+                    <label class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Nama Produk</label>
+                    <input type="text" id="adminProdTitle" required class="w-full px-3 py-1.5 border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 rounded-xl outline-none">
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Kategori</label>
+                        <input type="text" id="adminProdCategory" required class="w-full px-3 py-1.5 border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 rounded-xl outline-none">
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Harga (Rp)</label>
+                        <input type="number" id="adminProdPrice" required class="w-full px-3 py-1.5 border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 rounded-xl outline-none">
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Stok</label>
+                        <input type="number" id="adminProdStock" required class="w-full px-3 py-1.5 border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 rounded-xl outline-none">
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Varian (Pisah Koma)</label>
+                        <input type="text" id="adminProdVariants" placeholder="S, M, L atau Hitam, Putih" class="w-full px-3 py-1.5 border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 rounded-xl outline-none">
+                    </div>
+                </div>
+                <div>
+                    <label class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">URL Gambar</label>
+                    <input type="url" id="adminProdImage" required class="w-full px-3 py-1.5 border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 rounded-xl outline-none">
+                </div>
+                <div>
+                    <label class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Deskripsi Ringkas</label>
+                    <textarea id="adminProdDesc" rows="2" required class="w-full px-3 py-1.5 border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 rounded-xl outline-none"></textarea>
+                </div>
+                <div class="pt-2 flex justify-end gap-2">
+                    <button type="button" onclick="closeAdminProductModal()" class="px-3 py-1.5 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-xl font-semibold">Batal</button>
+                    <button type="submit" class="px-4 py-1.5 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-xl font-bold">Simpan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- TOAST CONTAINER -->
+    <div id="toastContainer" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged, signInWithCustomToken, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'tuyyistore-app';
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
+            apiKey: "AIzaSyDemoKeyOnlyForRenderFallback",
+            authDomain: "tuyyistore.firebaseapp.com",
+            projectId: "tuyyistore",
+            storageBucket: "tuyyistore.appspot.com",
+            messagingSenderId: "123456789",
+            appId: "1:123456789:web:abcdef"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const googleProvider = new GoogleAuthProvider();
+
+        let currentUser = null;
+        let simulatedUser = null;
+        let localActivities = [];
+        let unsubscribeActivityListener = null;
+
+        if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+            signInWithCustomToken(auth, __initial_auth_token).catch(() => signInAnonymously(auth));
+        }
+
+        onAuthStateChanged(auth, (user) => {
+            currentUser = user;
+            if (!simulatedUser) {
+                updateAuthUI(user);
+                if (user && !user.isAnonymous) {
+                    listenToUserActivities(user.uid);
+                }
+            }
+        });
+
+        window.handleGoogleLogin = async function() {
+            try {
+                const result = await signInWithPopup(auth, googleProvider);
+                currentUser = result.user;
+                simulatedUser = null;
+                updateAuthUI(currentUser);
+                showToast(`Selamat datang di TuyyiStore, ${currentUser.displayName}!`, "success");
+                logUserActivity("LOGIN", `Login Google (${currentUser.email})`);
+            } catch (error) {
+                try {
+                    const anonResult = await signInAnonymously(auth);
+                    currentUser = anonResult.user;
+                } catch (e) {
+                    currentUser = null;
+                }
+
+                simulatedUser = {
+                    uid: currentUser ? currentUser.uid : 'demo-google-user-123',
+                    displayName: 'Budi Pratama (Demo)',
+                    email: 'tuyyistore@gmail.com', // Admin email demo
+                    photoURL: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&auto=format&fit=crop&q=80',
+                    isAnonymous: false
+                };
+
+                updateAuthUI(simulatedUser);
+
+                if (currentUser) {
+                    listenToUserActivities(currentUser.uid);
+                } else {
+                    renderLocalActivities();
+                }
+
+                logUserActivity("LOGIN", `Login akun Google Demo TuyyiStore (${simulatedUser.email})`);
+            }
+        };
+
+        window.handleLogout = async function() {
+            const activeUser = simulatedUser || currentUser;
+            if (activeUser) {
+                await logUserActivity("LOGOUT", `Logout (${activeUser.email || 'User'})`);
+            }
+            
+            simulatedUser = null;
+            localActivities = [];
+            
+            if (unsubscribeActivityListener) {
+                unsubscribeActivityListener();
+                unsubscribeActivityListener = null;
+            }
+
+            try { await signOut(auth); } catch (e) {}
+            updateAuthUI(null);
+            showToast("Anda telah keluar dari TuyyiStore.", "info");
+        };
+
+        window.logUserActivity = async function(type, details) {
+            const activeUser = simulatedUser || (currentUser && !currentUser.isAnonymous ? currentUser : null);
+            if (!activeUser) return;
+
+            const activityData = {
+                type: type,
+                details: details,
+                timestamp: new Date(),
+                userName: activeUser.displayName || 'User',
+                userEmail: activeUser.email || ''
+            };
+
+            if (currentUser) {
+                try {
+                    const activityCollection = collection(db, 'artifacts', appId, 'users', currentUser.uid, 'activities');
+                    await addDoc(activityCollection, { ...activityData, timestamp: serverTimestamp() });
+                    return;
+                } catch (error) {}
+            }
+
+            localActivities.unshift(activityData);
+            renderLocalActivities();
+        };
+
+        function listenToUserActivities(uid) {
+            const activityCollection = collection(db, 'artifacts', appId, 'users', uid, 'activities');
+            if (unsubscribeActivityListener) unsubscribeActivityListener();
+
+            unsubscribeActivityListener = onSnapshot(activityCollection, (snapshot) => {
+                let activities = [];
+                snapshot.forEach(doc => activities.push({ id: doc.id, ...doc.data() }));
+                activities.sort((a, b) => (b.timestamp?.seconds || 0) - (a.timestamp?.seconds || 0));
+                if (localActivities.length > 0) activities = [...localActivities, ...activities];
+
+                renderActivitiesUI(activities);
+                window.adminActivitiesList = activities;
+                if (window.renderAdminLogs) window.renderAdminLogs();
+            }, () => renderLocalActivities());
+        }
+
+        function renderLocalActivities() {
+            renderActivitiesUI(localActivities);
+            window.adminActivitiesList = localActivities;
+            if (window.renderAdminLogs) window.renderAdminLogs();
+        }
+
+        function renderActivitiesUI(activities) {
+            const activityList = document.getElementById('activityList');
+            if (!activityList) return;
+
+            if (!activities || activities.length === 0) {
+                activityList.innerHTML = `<p class="text-center text-slate-400 text-xs py-6">Belum ada aktivitas tercatat.</p>`;
+                return;
+            }
+
+            activityList.innerHTML = activities.map(act => {
+                let dateObj = act.timestamp?.seconds ? new Date(act.timestamp.seconds * 1000) : (act.timestamp instanceof Date ? act.timestamp : new Date());
+                const formattedTime = dateObj.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+
+                return `
+                    <div class="p-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-xl text-xs space-y-0.5">
+                        <div class="flex items-center justify-between">
+                            <span class="font-bold text-[10px] text-indigo-600 dark:text-indigo-400 uppercase tracking-wider">${act.type}</span>
+                            <span class="text-[9px] text-slate-400">${formattedTime}</span>
+                        </div>
+                        <p class="text-slate-700 dark:text-slate-300 font-medium text-[11px]">${act.details}</p>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function updateAuthUI(user) {
+            const activeUser = simulatedUser || (user && !user.isAnonymous ? user : null);
+            const loginBtn = document.getElementById('loginBtn');
+            const userProfile = document.getElementById('userProfile');
+
+            if (activeUser) {
+                loginBtn.classList.add('hidden');
+                userProfile.classList.remove('hidden');
+
+                document.getElementById('userAvatar').src = activeUser.photoURL || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80';
+                document.getElementById('dropdownName').textContent = activeUser.displayName || 'User';
+                document.getElementById('dropdownEmail').textContent = activeUser.email || '';
+                
+                const checkoutNameInput = document.getElementById('checkoutName');
+                if (checkoutNameInput) checkoutNameInput.value = activeUser.displayName || '';
+            } else {
+                loginBtn.classList.remove('hidden');
+                userProfile.classList.add('hidden');
+            }
+        }
+    </script>
+
+    <script>
+        let products = [
+            {
+                id: 1,
+                title: "Wireless Noise-Canceling Headphones Tuyyi",
+                category: "Elektronik",
+                price: 1850000,
+                rating: 4.8,
+                stock: 12,
+                variants: ["Hitam", "Putih", "Biru"],
+                image: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=600&auto=format&fit=crop&q=80",
+                description: "Headphone nirkabel kelas premium TuyyiStore dengan fitur peredam bising aktif (ANC) dan baterai 30 jam.",
+                reviews: [
+                    { author: "Rian S.", rating: 5, comment: "Suaranya jernih banget, ANC bekerja sempurna!" },
+                    { author: "Siti M.", rating: 4.5, comment: "Baterai sangat awet untuk pemakaian harian." }
+                ]
+            },
+            {
+                id: 2,
+                title: "Smartwatch Fitness Tracker GPS",
+                category: "Elektronik",
+                price: 999000,
+                rating: 4.6,
+                stock: 2, // Low stock <= 3
+                variants: ["Hitam", "Silver"],
+                image: "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=600&auto=format&fit=crop&q=80",
+                description: "Pantau aktivitas olahraga dan kesehatan harian Anda secara akurat dengan layar OLED tajam.",
+                reviews: [
+                    { author: "Dewi K.", rating: 5, comment: "Desain stylish dan fitur kesehatan sangat membantu." }
+                ]
+            },
+            {
+                id: 3,
+                title: "Jaket Denim Casual Premium",
+                category: "Pakaian",
+                price: 349000,
+                rating: 4.7,
+                stock: 20,
+                variants: ["S", "M", "L", "XL"],
+                image: "https://images.unsplash.com/photo-1576995853123-5a10305d93c0?w=600&auto=format&fit=crop&q=80",
+                description: "Jaket denim berbahan katun pilihan yang fleksibel dan nyaman digunakan sehari-hari.",
+                reviews: []
+            },
+            {
+                id: 4,
+                title: "Kacamata Hitam UV Protection",
+                category: "Aksesoris",
+                price: 129000,
+                rating: 4.5,
+                stock: 15,
+                variants: ["Hitam Frame", "Gold Frame"],
+                image: "https://images.unsplash.com/photo-1511499767150-a48a237f0083?w=600&auto=format&fit=crop&q=80",
+                description: "Melindungi mata dari paparan sinar UV400 dengan desain polarized modern.",
+                reviews: []
+            },
+            {
+                id: 5,
+                title: "Mechanical Gaming Keyboard RGB",
+                category: "Elektronik",
+                price: 650000,
+                rating: 4.9,
+                stock: 3, // Low stock <= 3
+                variants: ["Blue Switch", "Red Switch"],
+                image: "https://images.unsplash.com/photo-1587829741301-dc798b83add3?w=600&auto=format&fit=crop&q=80",
+                description: "Keyboard mekanikal responsif dengan switch taktil presisi dan backlight RGB terintegrasi.",
+                reviews: []
+            },
+            {
+                id: 6,
+                title: "Ransel Minimalis Water Resistant",
+                category: "Aksesoris",
+                price: 280000,
+                rating: 4.8,
+                stock: 18,
+                variants: ["Hitam", "Abu-abu"],
+                image: "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=600&auto=format&fit=crop&q=80",
+                description: "Tas punggung elegan kompartemen laptop 15.6 inci berbahan kedap air ramah lingkungan.",
+                reviews: []
+            }
+        ];
+
+        let orders = [
+            {
+                id: "ORD-9821",
+                customerName: "Budi Pratama",
+                phone: "081234567890",
+                address: "Jl. Sudirman No. 45, Jakarta Selatan",
+                paymentMethod: "Transfer Bank (BCA)",
+                items: [{ title: "Wireless Headphones Tuyyi", quantity: 1, price: 1850000, variant: "Hitam" }],
+                totalAmount: 2053500,
+                status: "Diproses"
+            }
+        ];
+
+        let cart = [];
+        let wishlist = [];
+        let activeCategory = 'all';
+        let searchQuery = '';
+        let activeCoupon = null;
+        let isAdminVerified = false;
+
+        window.onload = function() {
+            startFlashSaleTimer();
+            renderCategories();
+            renderProducts();
+            updateCartUI();
+            updateWishlistUI();
+            updateAdminMetrics();
+        };
+
+        function toggleDarkMode() {
+            document.documentElement.classList.toggle('dark');
+            const icon = document.getElementById('themeIcon');
+            if (document.documentElement.classList.contains('dark')) {
+                icon.className = 'fa-solid fa-sun text-amber-400 text-sm';
+            } else {
+                icon.className = 'fa-solid fa-moon text-sm';
+            }
+        }
+
+        function startFlashSaleTimer() {
+            let totalSeconds = (2 * 3600) + (45 * 60) + 18;
+            setInterval(() => {
+                if (totalSeconds <= 0) totalSeconds = 3600 * 5;
+                totalSeconds--;
+                const hrs = Math.floor(totalSeconds / 3600);
+                const mins = Math.floor((totalSeconds % 3600) / 60);
+                const secs = totalSeconds % 60;
+
+                document.getElementById('timerHours').textContent = String(hrs).padStart(2, '0');
+                document.getElementById('timerMinutes').textContent = String(mins).padStart(2, '0');
+                document.getElementById('timerSeconds').textContent = String(secs).padStart(2, '0');
+            }, 1000);
+        }
+
+        function formatIDR(amount) {
+            return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(amount);
+        }
+
+        function switchView(view) {
+            if (view === 'admin' && !isAdminVerified) {
+                openAdminPinModal();
+                return;
+            }
+
+            const storeView = document.getElementById('storeView');
+            const adminView = document.getElementById('adminView');
+            const modeStoreBtn = document.getElementById('modeStoreBtn');
+            const modeAdminBtn = document.getElementById('modeAdminBtn');
+            const headerSearch = document.getElementById('headerSearchContainer');
+
+            if (view === 'admin') {
+                storeView.classList.add('hidden');
+                adminView.classList.remove('hidden');
+                headerSearch.classList.add('hidden');
+
+                modeStoreBtn.className = "px-3 py-1 rounded-lg transition-all text-slate-500 hover:text-slate-900 dark:hover:text-white";
+                modeAdminBtn.className = "px-3 py-1 rounded-lg transition-all text-slate-900 dark:text-white bg-white dark:bg-slate-900 shadow-subtle";
+
+                renderAdminProducts();
+                renderAdminOrders();
+                renderAdminLogs();
+                updateAdminMetrics();
+
+                if (window.logUserActivity) window.logUserActivity("ADMIN_ACTION", "Membuka Dashboard Admin TuyyiStore");
+            } else {
+                adminView.classList.add('hidden');
+                storeView.classList.remove('hidden');
+                headerSearch.classList.remove('hidden');
+
+                modeAdminBtn.className = "px-3 py-1 rounded-lg transition-all text-slate-500 hover:text-slate-900 dark:hover:text-white";
+                modeStoreBtn.className = "px-3 py-1 rounded-lg transition-all text-slate-900 dark:text-white bg-white dark:bg-slate-900 shadow-subtle";
+
+                renderProducts();
+            }
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function openAdminPinModal() {
+            document.getElementById('adminPinModal').classList.remove('hidden');
+        }
+
+        function closeAdminPinModal() {
+            document.getElementById('adminPinModal').classList.add('hidden');
+        }
+
+        function verifyAdminPin() {
+            const input = document.getElementById('adminPinInput').value;
+            if (input === '123456') {
+                isAdminVerified = true;
+                closeAdminPinModal();
+                switchView('admin');
+                showToast("Akses Admin TuyyiStore Terverifikasi!", "success");
+            } else {
+                showToast("PIN Admin Salah!", "warning");
+            }
+        }
+
+        function renderCategories() {
+            const categories = ['all', ...new Set(products.map(p => p.category)), 'wishlist'];
+            const container = document.getElementById('categoryButtons');
+            
+            container.innerHTML = categories.map(cat => {
+                let label = cat === 'all' ? 'Semua' : (cat === 'wishlist' ? 'Favorit' : cat);
+                const isActive = activeCategory === cat;
+                return `
+                    <button onclick="filterCategory('${cat}')" 
+                        class="px-3.5 py-1 rounded-full text-xs font-semibold whitespace-nowrap transition-all ${
+                            isActive 
+                            ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900' 
+                            : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 border border-slate-200/80 dark:border-slate-800 hover:bg-slate-100'
+                        }">
+                        ${cat === 'wishlist' ? '<i class="fa-solid fa-heart mr-1 text-red-500"></i>' : ''}${label}
+                    </button>
+                `;
+            }).join('');
+        }
+
+        function renderProducts() {
+            const grid = document.getElementById('productsGrid');
+            const emptyState = document.getElementById('emptyState');
+
+            let filtered = products.filter(p => {
+                if (activeCategory === 'wishlist') return wishlist.includes(p.id);
+                const matchesCategory = activeCategory === 'all' || p.category === activeCategory;
+                const matchesSearch = p.title.toLowerCase().includes(searchQuery.toLowerCase());
+                return matchesCategory && matchesSearch;
+            });
+
+            // Sorting logic
+            const sortVal = document.getElementById('sortSelect')?.value || 'newest';
+            if (sortVal === 'price-low') filtered.sort((a, b) => a.price - b.price);
+            else if (sortVal === 'price-high') filtered.sort((a, b) => b.price - a.price);
+            else if (sortVal === 'rating') filtered.sort((a, b) => b.rating - a.rating);
+
+            if (filtered.length === 0) {
+                grid.innerHTML = '';
+                emptyState.classList.remove('hidden');
+                return;
+            }
+
+            emptyState.classList.add('hidden');
+            grid.innerHTML = filtered.map(p => {
+                const isWish = wishlist.includes(p.id);
+                const isLowStock = p.stock <= 3;
+
+                return `
+                    <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-subtle hover:shadow-card transition-all duration-300 flex flex-col overflow-hidden group">
+                        <div class="relative aspect-square bg-slate-100 dark:bg-slate-800 cursor-pointer overflow-hidden" onclick="openProductModal(${p.id})">
+                            <img src="${p.image}" alt="${p.title}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out">
+                            
+                            <span class="absolute top-3 left-3 bg-white/90 dark:bg-slate-900/90 text-slate-800 dark:text-white text-[10px] font-bold px-2 py-0.5 rounded-md border border-slate-200/60 dark:border-slate-800">
+                                ${p.category}
+                            </span>
+
+                            ${isLowStock ? `
+                                <span class="absolute top-3 right-10 bg-amber-500 text-white text-[9px] font-bold px-2 py-0.5 rounded-md shadow-xs">
+                                    Stok Sisa ${p.stock}
+                                </span>
+                            ` : ''}
+
+                            <button onclick="event.stopPropagation(); toggleWishlist(${p.id});" class="absolute top-3 right-3 w-7 h-7 bg-white dark:bg-slate-900 rounded-full flex items-center justify-center text-slate-400 hover:text-red-500 shadow-xs transition-colors">
+                                <i class="${isWish ? 'fa-solid text-red-500' : 'fa-regular'} fa-heart text-xs"></i>
+                            </button>
+                        </div>
+
+                        <div class="p-4 flex flex-col flex-grow">
+                            <div class="flex items-center gap-1 text-amber-400 text-xs mb-1">
+                                <i class="fa-solid fa-star text-[10px]"></i>
+                                <span class="font-bold text-slate-700 dark:text-slate-300 text-[11px]">${p.rating}</span>
+                            </div>
+
+                            <h3 class="font-bold text-slate-900 dark:text-white text-xs line-clamp-2 mb-2 hover:text-indigo-600 cursor-pointer transition-colors" onclick="openProductModal(${p.id})">
+                                ${p.title}
+                            </h3>
+
+                            <div class="mt-auto pt-3 flex items-center justify-between border-t border-slate-100 dark:border-slate-800">
+                                <span class="text-xs sm:text-sm font-extrabold text-slate-900 dark:text-white">${formatIDR(p.price)}</span>
+                                <button onclick="addToCart(${p.id})" ${p.stock <= 0 ? 'disabled' : ''} class="px-3 py-1.5 ${p.stock > 0 ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900 hover:bg-slate-800' : 'bg-slate-100 text-slate-400'} rounded-xl text-xs font-semibold transition-all shadow-xs">
+                                    + Beli
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function filterCategory(cat) {
+            activeCategory = cat;
+            renderCategories();
+            renderProducts();
+        }
+
+        function handleSearch() {
+            searchQuery = document.getElementById('searchInput').value;
+            renderProducts();
+        }
+
+        function handleSortChange() {
+            renderProducts();
+        }
+
+        function toggleWishlist(id) {
+            if (wishlist.includes(id)) {
+                wishlist = wishlist.filter(item => item !== id);
+                showToast("Dihapus dari favorit", "info");
+            } else {
+                wishlist.push(id);
+                showToast("Ditambahkan ke favorit", "success");
+            }
+            updateWishlistUI();
+            renderProducts();
+        }
+
+        function updateWishlistUI() {
+            const badge = document.getElementById('wishlistBadge');
+            badge.textContent = wishlist.length;
+            if (wishlist.length > 0) badge.classList.remove('scale-0');
+            else badge.classList.add('scale-0');
+        }
+
+        function toggleUserDropdown() {
+            document.getElementById('userDropdown').classList.toggle('hidden');
+        }
+
+        function addToCart(productId, selectedVariant = null) {
+            const product = products.find(p => p.id === productId);
+            if (!product || product.stock <= 0) return;
+
+            const variant = selectedVariant || (product.variants && product.variants.length > 0 ? product.variants[0] : '-');
+
+            const existingIndex = cart.findIndex(item => item.id === productId && item.variant === variant);
+            if (existingIndex > -1) {
+                cart[existingIndex].quantity += 1;
+            } else {
+                cart.push({ ...product, variant: variant, quantity: 1 });
+            }
+
+            updateCartUI();
+            showToast(`"${product.title}" (${variant}) ditambahkan!`);
+            if (window.logUserActivity) window.logUserActivity("CART_ADD", `Tambah "${product.title}" (${variant})`);
+        }
+
+        function updateCartQuantity(productId, variant, delta) {
+            const index = cart.findIndex(item => item.id === productId && item.variant === variant);
+            if (index > -1) {
+                cart[index].quantity += delta;
+                if (cart[index].quantity <= 0) cart.splice(index, 1);
+            }
+            updateCartUI();
+        }
+
+        function removeFromCart(productId, variant) {
+            cart = cart.filter(i => !(i.id === productId && i.variant === variant));
+            updateCartUI();
+        }
+
+        function applyCoupon() {
+            const code = document.getElementById('couponInput').value.trim().toUpperCase();
+            if (code === 'TUYYI2026') {
+                activeCoupon = { code: 'TUYYI2026', type: 'percent', value: 0.10 };
+            } else if (code === 'TUYYI50K') {
+                activeCoupon = { code: 'TUYYI50K', type: 'fixed', value: 50000 };
+            } else if (code === 'DISKON20') {
+                activeCoupon = { code: 'DISKON20', type: 'percent', value: 0.20 };
+            } else {
+                showToast("Kode promo tidak valid!", "warning");
+                return;
+            }
+            document.getElementById('appliedCouponBadge').classList.remove('hidden');
+            document.getElementById('couponCodeName').textContent = activeCoupon.code;
+            updateCartUI();
+            showToast("Diskon promo TuyyiStore berhasil dipasang!", "success");
+        }
+
+        function removeCoupon() {
+            activeCoupon = null;
+            document.getElementById('appliedCouponBadge').classList.add('hidden');
+            document.getElementById('couponInput').value = '';
+            updateCartUI();
+        }
+
+        function updateCartUI() {
+            const cartItemsContainer = document.getElementById('cartItemsContainer');
+            const cartBadge = document.getElementById('cartBadge');
+            const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
+
+            cartBadge.textContent = totalItems;
+            if (totalItems > 0) cartBadge.classList.remove('scale-0');
+            else cartBadge.classList.add('scale-0');
+
+            if (cart.length === 0) {
+                cartItemsContainer.innerHTML = `<p class="text-center text-slate-400 text-xs py-10">Keranjang belanja TuyyiStore Anda kosong</p>`;
+            } else {
+                cartItemsContainer.innerHTML = cart.map(item => `
+                    <div class="flex items-center gap-3 p-2.5 bg-slate-50 dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700">
+                        <img src="${item.image}" alt="${item.title}" class="w-12 h-12 object-cover rounded-xl bg-white">
+                        <div class="flex-1 min-w-0">
+                            <h4 class="text-xs font-bold text-slate-800 dark:text-white truncate">${item.title}</h4>
+                            <span class="text-[10px] text-slate-400 block">Varian: ${item.variant}</span>
+                            <span class="text-xs font-semibold text-slate-900 dark:text-slate-100">${formatIDR(item.price)}</span>
+                            
+                            <div class="flex items-center gap-1.5 mt-1">
+                                <button onclick="updateCartQuantity(${item.id}, '${item.variant}', -1)" class="w-5 h-5 rounded-md bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 flex items-center justify-center text-xs text-slate-700 dark:text-slate-200">-</button>
+                                <span class="text-xs font-bold w-4 text-center text-slate-800 dark:text-white">${item.quantity}</span>
+                                <button onclick="updateCartQuantity(${item.id}, '${item.variant}', 1)" class="w-5 h-5 rounded-md bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 flex items-center justify-center text-xs text-slate-700 dark:text-slate-200">+</button>
+                            </div>
+                        </div>
+                        <button onclick="removeFromCart(${item.id}, '${item.variant}')" class="text-slate-400 hover:text-red-500 p-1 transition-colors">
+                            <i class="fa-regular fa-trash-can text-xs"></i>
+                        </button>
+                    </div>
+                `).join('');
+            }
+
+            const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+            const shipping = parseInt(document.getElementById('courierSelect')?.value || '15000');
+            
+            let discount = 0;
+            if (activeCoupon) {
+                if (activeCoupon.type === 'percent') discount = subtotal * activeCoupon.value;
+                else discount = activeCoupon.value;
+            }
+
+            const tax = Math.max(0, subtotal - discount) * 0.11;
+            const total = Math.max(0, subtotal - discount) + tax + shipping;
+
+            document.getElementById('cartSubtotal').textContent = formatIDR(subtotal);
+            document.getElementById('cartShipping').textContent = formatIDR(shipping);
+            
+            const discountRow = document.getElementById('discountRow');
+            if (discount > 0) {
+                discountRow.classList.remove('hidden');
+                discountRow.classList.add('flex');
+                document.getElementById('cartDiscount').textContent = `- ${formatIDR(discount)}`;
+            } else {
+                discountRow.classList.add('hidden');
+                discountRow.classList.remove('flex');
+            }
+
+            document.getElementById('cartTax').textContent = formatIDR(tax);
+            document.getElementById('cartTotal').textContent = formatIDR(total);
+        }
+
+        function toggleCartDrawer() {
+            const drawer = document.getElementById('cartDrawer');
+            const overlay = document.getElementById('cartOverlay');
+
+            if (drawer.classList.contains('translate-x-full')) {
+                overlay.classList.remove('hidden');
+                setTimeout(() => {
+                    overlay.classList.remove('opacity-0');
+                    drawer.classList.remove('translate-x-full');
+                }, 10);
+            } else {
+                drawer.classList.add('translate-x-full');
+                overlay.classList.add('opacity-0');
+                setTimeout(() => overlay.classList.add('hidden'), 250);
+            }
+        }
+
+        function checkoutViaWhatsApp() {
+            if (cart.length === 0) {
+                showToast("Keranjang Anda kosong!", "warning");
+                return;
+            }
+
+            let text = "Halo Admin TuyyiStore, saya ingin memesan barang berikut:\n\n";
+            cart.forEach((item, idx) => {
+                text += `${idx + 1}. ${item.title} (${item.variant}) x${item.quantity} - ${formatIDR(item.price * item.quantity)}\n`;
+            });
+
+            const total = document.getElementById('cartTotal').textContent;
+            text += `\nTotal Tagihan: *${total}*\nMohon instruksi pembayaran selengkapnya. Terima kasih!`;
+
+            const waUrl = `https://wa.me/6283121214520?text=${encodeURIComponent(text)}`;
+            window.open(waUrl, '_blank');
+            if (window.logUserActivity) window.logUserActivity("WA_CHECKOUT", "Checkout via WhatsApp Direct TuyyiStore");
+        }
+
+        function openProductModal(productId) {
+            const p = products.find(prod => prod.id === productId);
+            if (!p) return;
+
+            let selectedVar = p.variants && p.variants.length > 0 ? p.variants[0] : null;
+
+            const content = document.getElementById('productModalContent');
+            content.innerHTML = `
+                <div class="space-y-4">
+                    <img src="${p.image}" alt="${p.title}" class="w-full h-52 object-cover rounded-2xl">
+                    <div>
+                        <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider bg-slate-100 dark:bg-slate-800 px-2.5 py-1 rounded-md">${p.category}</span>
+                        <h2 class="text-base font-bold text-slate-900 dark:text-white mt-1.5">${p.title}</h2>
+                    </div>
+                    
+                    <div class="text-base font-extrabold text-indigo-600 dark:text-indigo-400">${formatIDR(p.price)}</div>
+
+                    ${p.variants && p.variants.length > 0 ? `
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Pilih Varian:</label>
+                            <div class="flex flex-wrap gap-1.5">
+                                ${p.variants.map((v, i) => `
+                                    <button onclick="selectModalVariant(this, '${v}')" class="modal-var-btn px-3 py-1 text-xs rounded-xl border font-semibold ${i === 0 ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900 border-slate-900' : 'bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200'}">
+                                        ${v}
+                                    </button>
+                                `).join('')}
+                            </div>
+                        </div>
+                    ` : ''}
+
+                    <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">${p.description}</p>
+
+                    <!-- Product Reviews Section -->
+                    <div class="border-t border-slate-100 dark:border-slate-800 pt-3 space-y-2">
+                        <h4 class="text-xs font-bold text-slate-800 dark:text-white">Ulasan Pembeli (${p.reviews ? p.reviews.length : 0})</h4>
+                        <div class="space-y-1.5 max-h-28 overflow-y-auto">
+                            ${p.reviews && p.reviews.length > 0 ? p.reviews.map(r => `
+                                <div class="p-2 bg-slate-50 dark:bg-slate-800 rounded-xl text-[11px]">
+                                    <div class="flex justify-between font-bold text-slate-800 dark:text-white">
+                                        <span>${r.author}</span>
+                                        <span class="text-amber-400"><i class="fa-solid fa-star text-[9px]"></i> ${r.rating}</span>
+                                    </div>
+                                    <p class="text-slate-600 dark:text-slate-300 mt-0.5">${r.comment}</p>
+                                </div>
+                            `).join('') : '<p class="text-slate-400 text-[11px]">Belum ada ulasan.</p>'}
+                        </div>
+                    </div>
+
+                    <button onclick="addToCart(${p.id}, window.currentModalVariant || '${selectedVar}'); closeProductModal();" class="w-full py-2.5 bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-bold rounded-xl text-xs mt-2 transition-all shadow-xs">
+                        + Tambah ke Keranjang
+                    </button>
+                </div>
+            `;
+
+            window.currentModalVariant = selectedVar;
+            document.getElementById('productModal').classList.remove('hidden');
+        }
+
+        function selectModalVariant(btn, variant) {
+            document.querySelectorAll('.modal-var-btn').forEach(b => {
+                b.className = 'modal-var-btn px-3 py-1 text-xs rounded-xl border font-semibold bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700';
+            });
+            btn.className = 'modal-var-btn px-3 py-1 text-xs rounded-xl border font-semibold bg-slate-900 dark:bg-white text-white dark:text-slate-900 border-slate-900';
+            window.currentModalVariant = variant;
+        }
+
+        function closeProductModal() {
+            document.getElementById('productModal').classList.add('hidden');
+        }
+
+        function openActivityModal() {
+            document.getElementById('activityModal').classList.remove('hidden');
+            document.getElementById('userDropdown').classList.add('hidden');
+        }
+
+        function closeActivityModal() {
+            document.getElementById('activityModal').classList.add('hidden');
+        }
+
+        function openCheckoutModal() {
+            if (cart.length === 0) {
+                showToast("Keranjang Anda kosong!", "warning");
+                return;
+            }
+            const totalText = document.getElementById('cartTotal').textContent;
+            document.getElementById('checkoutModalTotal').textContent = totalText;
+            toggleCartDrawer();
+            document.getElementById('checkoutModal').classList.remove('hidden');
+        }
+
+        function closeCheckoutModal() {
+            document.getElementById('checkoutModal').classList.add('hidden');
+        }
+
+        function handleCheckoutSubmit(e) {
+            e.preventDefault();
+            const name = document.getElementById('checkoutName').value;
+            const phone = document.getElementById('checkoutPhone').value;
+            const address = document.getElementById('checkoutAddress').value;
+            const payment = document.getElementById('checkoutPayment').value;
+            const totalText = document.getElementById('checkoutModalTotal').textContent;
+
+            orders.unshift({
+                id: "ORD-" + Math.floor(1000 + Math.random() * 9000),
+                customerName: name,
+                phone: phone,
+                address: address,
+                paymentMethod: payment,
+                items: cart.map(item => ({ title: item.title, quantity: item.quantity, price: item.price, variant: item.variant })),
+                totalAmount: parseInt(totalText.replace(/[^0-9]/g, '')) || 0,
+                status: "Diproses"
+            });
+
+            if (window.logUserActivity) {
+                window.logUserActivity("CHECKOUT", `Pemesanan TuyyiStore (${cart.length} item) total ${totalText}`);
+            }
+
+            closeCheckoutModal();
+            cart = [];
+            updateCartUI();
+            updateAdminMetrics();
+            showToast("Pesanan TuyyiStore berhasil dikirim!", "success");
+        }
+
+        function switchAdminTab(tab) {
+            ['products', 'orders', 'logs'].forEach(t => {
+                document.getElementById(`adminTab-${t}`).classList.add('hidden');
+                document.getElementById(`adminTabBtn-${t}`).className = "pb-3 text-xs font-bold text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 border-b-2 border-transparent transition-colors";
+            });
+
+            document.getElementById(`adminTab-${tab}`).classList.remove('hidden');
+            document.getElementById(`adminTabBtn-${tab}`).className = "pb-3 text-xs font-bold text-slate-900 dark:text-white border-b-2 border-slate-900 dark:border-white transition-colors";
+        }
+
+        function updateAdminMetrics() {
+            const totalRevenue = orders.reduce((sum, o) => o.status !== 'Dibatalkan' ? sum + o.totalAmount : sum, 0);
+            const lowStockCount = products.filter(p => p.stock <= 3).length;
+
+            document.getElementById('adminMetricRevenue').textContent = formatIDR(totalRevenue);
+            document.getElementById('adminMetricOrders').textContent = orders.length;
+            document.getElementById('adminMetricProducts').textContent = products.length;
+            document.getElementById('adminMetricLowStock').textContent = `${lowStockCount} Produk`;
+        }
+
+        function renderAdminProducts() {
+            const tbody = document.getElementById('adminProductsTable');
+            const search = (document.getElementById('adminProductSearch')?.value || '').toLowerCase();
+            const filtered = products.filter(p => p.title.toLowerCase().includes(search));
+
+            tbody.innerHTML = filtered.map(p => `
+                <tr class="hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition-colors">
+                    <td class="p-3.5 font-bold text-slate-900 dark:text-white flex items-center gap-2.5">
+                        <img src="${p.image}" alt="${p.title}" class="w-8 h-8 rounded-lg object-cover">
+                        <span class="truncate max-w-[160px]">${p.title}</span>
+                    </td>
+                    <td class="p-3.5">${p.category}</td>
+                    <td class="p-3.5 font-bold text-slate-900 dark:text-white">${formatIDR(p.price)}</td>
+                    <td class="p-3.5">
+                        <span class="${p.stock <= 3 ? 'text-amber-600 font-bold' : ''}">${p.stock} Unit</span>
+                    </td>
+                    <td class="p-3.5 text-right space-x-1.5">
+                        <button onclick="editAdminProduct(${p.id})" class="text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white px-1"><i class="fa-solid fa-pen text-xs"></i></button>
+                        <button onclick="deleteAdminProduct(${p.id})" class="text-red-500 hover:text-red-700 px-1"><i class="fa-regular fa-trash-can text-xs"></i></button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function renderAdminOrders() {
+            const tbody = document.getElementById('adminOrdersTable');
+            document.getElementById('adminOrdersCount').textContent = orders.length;
+
+            if (orders.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="7" class="text-center p-6 text-slate-400">Belum ada pesanan.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = orders.map(o => `
+                <tr class="hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition-colors">
+                    <td class="p-3.5 font-extrabold text-slate-900 dark:text-white">${o.id}</td>
+                    <td class="p-3.5 font-semibold">${o.customerName}<br><span class="text-[10px] text-slate-400 font-normal">${o.phone}</span></td>
+                    <td class="p-3.5 truncate max-w-[120px]">${o.address}</td>
+                    <td class="p-3.5 truncate max-w-[120px]">${o.items.map(i => `${i.title} (${i.variant})`).join(', ')}</td>
+                    <td class="p-3.5 font-bold text-slate-900 dark:text-white">${formatIDR(o.totalAmount)}</td>
+                    <td class="p-3.5">
+                        <div class="space-y-1">
+                            <span class="font-bold text-indigo-600 dark:text-indigo-400 text-[11px] block">${o.status}</span>
+                            <div class="w-24 h-1.5 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
+                                <div class="h-full bg-indigo-600 ${o.status === 'Diproses' ? 'w-1/3' : (o.status === 'Selesai' ? 'w-full' : 'w-2/3')} rounded-full"></div>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="p-3.5 text-right">
+                        <select onchange="updateOrderStatus('${o.id}', this.value)" class="text-[10px] border border-slate-200 dark:border-slate-700 rounded-lg px-2 py-1 outline-none bg-white dark:bg-slate-800 text-slate-800 dark:text-white">
+                            <option value="Diproses" ${o.status === 'Diproses' ? 'selected' : ''}>Diproses</option>
+                            <option value="Dalam Pengiriman" ${o.status === 'Dalam Pengiriman' ? 'selected' : ''}>Dalam Pengiriman</option>
+                            <option value="Selesai" ${o.status === 'Selesai' ? 'selected' : ''}>Selesai</option>
+                            <option value="Dibatalkan" ${o.status === 'Dibatalkan' ? 'selected' : ''}>Dibatalkan</option>
+                        </select>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function updateOrderStatus(orderId, newStatus) {
+            const order = orders.find(o => o.id === orderId);
+            if (order) {
+                order.status = newStatus;
+                renderAdminOrders();
+                updateAdminMetrics();
+                showToast(`Status pesanan ${orderId} diperbarui`, "info");
+            }
+        }
+
+        function exportOrdersToCSV() {
+            if (orders.length === 0) {
+                showToast("Belum ada data transaksi untuk diexport", "warning");
+                return;
+            }
+
+            let csv = "ID Pesanan,Nama Penerima,Telepon,Alamat,Total Tagihan,Status\n";
+            orders.forEach(o => {
+                csv += `"${o.id}","${o.customerName}","${o.phone}","${o.address}","${o.totalAmount}","${o.status}"\n`;
+            });
+
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.setAttribute('href', url);
+            a.setAttribute('download', `Laporan_Transaksi_TuyyiStore_${Date.now()}.csv`);
+            a.click();
+            showToast("Laporan CSV TuyyiStore berhasil diunduh!", "success");
+        }
+
+        function renderAdminLogs() {
+            const container = document.getElementById('adminLogsContainer');
+            const logs = window.adminActivitiesList || [];
+
+            if (logs.length === 0) {
+                container.innerHTML = `<p class="text-center text-slate-400 py-6 text-xs">Belum ada log aktivitas.</p>`;
+                return;
+            }
+
+            container.innerHTML = logs.map(act => `
+                <div class="p-3 bg-white dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700 rounded-xl text-xs flex justify-between items-center">
+                    <div>
+                        <strong class="text-slate-900 dark:text-white">${act.userName || 'User'}</strong>
+                        <p class="text-slate-600 dark:text-slate-300 mt-0.5">${act.details}</p>
+                    </div>
+                    <span class="text-[10px] text-slate-800 dark:text-white font-bold bg-slate-100 dark:bg-slate-700 px-2 py-0.5 rounded-md uppercase tracking-wider">${act.type}</span>
+                </div>
+            `).join('');
+        }
+
+        function openAdminProductModal(isEdit = false) {
+            document.getElementById('adminProductModalTitle').textContent = isEdit ? 'Edit Produk' : 'Tambah Produk Baru';
+            document.getElementById('adminProductModal').classList.remove('hidden');
+        }
+
+        function closeAdminProductModal() {
+            document.getElementById('adminProductModal').classList.add('hidden');
+            document.getElementById('adminProdId').value = '';
+            document.getElementById('adminProdTitle').value = '';
+            document.getElementById('adminProdCategory').value = '';
+            document.getElementById('adminProdPrice').value = '';
+            document.getElementById('adminProdStock').value = '';
+            document.getElementById('adminProdVariants').value = '';
+            document.getElementById('adminProdImage').value = '';
+            document.getElementById('adminProdDesc').value = '';
+        }
+
+        function editAdminProduct(id) {
+            const p = products.find(prod => prod.id === id);
+            if (!p) return;
+
+            document.getElementById('adminProdId').value = p.id;
+            document.getElementById('adminProdTitle').value = p.title;
+            document.getElementById('adminProdCategory').value = p.category;
+            document.getElementById('adminProdPrice').value = p.price;
+            document.getElementById('adminProdStock').value = p.stock;
+            document.getElementById('adminProdVariants').value = (p.variants || []).join(', ');
+            document.getElementById('adminProdImage').value = p.image;
+            document.getElementById('adminProdDesc').value = p.description;
+
+            openAdminProductModal(true);
+        }
+
+        function deleteAdminProduct(id) {
+            products = products.filter(prod => prod.id !== id);
+            renderAdminProducts();
+            renderCategories();
+            updateAdminMetrics();
+            showToast("Produk dihapus", "info");
+        }
+
+        function handleSaveProduct(e) {
+            e.preventDefault();
+            const id = document.getElementById('adminProdId').value;
+            const title = document.getElementById('adminProdTitle').value;
+            const category = document.getElementById('adminProdCategory').value;
+            const price = parseFloat(document.getElementById('adminProdPrice').value);
+            const stock = parseInt(document.getElementById('adminProdStock').value);
+            const varInput = document.getElementById('adminProdVariants').value;
+            const variants = varInput ? varInput.split(',').map(s => s.trim()) : ["Default"];
+            const image = document.getElementById('adminProdImage').value;
+            const description = document.getElementById('adminProdDesc').value;
+
+            if (id) {
+                const prod = products.find(p => p.id == id);
+                if (prod) {
+                    Object.assign(prod, { title, category, price, stock, variants, image, description });
+                }
+            } else {
+                products.unshift({ id: Date.now(), title, category, price, stock, variants, rating: 5.0, image, description, reviews: [] });
+            }
+
+            closeAdminProductModal();
+            renderAdminProducts();
+            renderCategories();
+            renderProducts();
+            updateAdminMetrics();
+            showToast("Produk tersimpan!", "success");
+        }
+
+        function showToast(message, type = "success") {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = `toast-enter pointer-events-auto flex items-center gap-2 px-3.5 py-2.5 rounded-2xl text-xs font-bold shadow-lg text-white ${type === 'success' ? 'bg-slate-900 dark:bg-white dark:text-slate-900' : 'bg-amber-600'}`;
+            toast.innerHTML = `<span>${message}</span>`;
+
+            container.appendChild(toast);
+            requestAnimationFrame(() => toast.classList.add('toast-enter-active'));
+
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                setTimeout(() => toast.remove(), 250);
+            }, 2500);
+        }
+    </script>
+</body>
+</html>
